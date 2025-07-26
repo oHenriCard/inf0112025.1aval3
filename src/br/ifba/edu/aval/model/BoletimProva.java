@@ -4,6 +4,8 @@ import java.time.Duration;
 import java.util.List;
 
 import br.ifba.edu.aval.exception.AtividadeNaoPermitidaException;
+import br.ifba.edu.aval.states.FaseProvaState;
+import br.ifba.edu.aval.states.PreProvaState;
 import br.ifba.edu.aval1.prototype.ListaPassagens;
 
 public class BoletimProva {
@@ -18,7 +20,7 @@ public class BoletimProva {
 	public Long minutoPartidaPrevisto;
 	public Long minutoPartidaEfetivo;
 	
-	private Integer fase;
+	private FaseProvaState fase;
 	
 	
 	public BoletimProva(String cboNumero, Long minutoPartidaPrevisto, ListaPassagens passagens) {
@@ -26,7 +28,10 @@ public class BoletimProva {
 		this.cboNumero = cboNumero;
 		this.passagens = passagens;
 		this.minutoPartidaEfetivo = this.minutoPartidaPrevisto = minutoPartidaPrevisto;
-		this.fase = BoletimProva.PRE_PROVA;
+		this.fase = new PreProvaState();
+	}
+	public void setFase(FaseProvaState novaFase) {
+		this.fase = novaFase;
 	}
 	
 
@@ -40,7 +45,7 @@ public class BoletimProva {
 	
 	@Override
 	public String toString() {
-		return "BoletimProva [cboNumero=" + cboNumero + ", passagens=" + passagens + "]";
+		return "BoletimProva [cboNumero=" + cboNumero + ", passagens=" + passagens + ", fase=" + fase.getClass().getSimpleName() + "]";
 	}	
 	
 	public Duration getTempo(Integer prismaID) {
@@ -48,47 +53,26 @@ public class BoletimProva {
 	}
 	
 	public void registrar(Integer prismaID, Duration tempo) throws AtividadeNaoPermitidaException {
-		if(this.fase != BoletimProva.PISTA)
-			throw new AtividadeNaoPermitidaException("Não pode registrar prisma");
-		this.passagens.registrarPassagem(prismaID, tempo);
-		
-	}
+        this.fase.registrarPassagem(this, prismaID, tempo);
+    }
 
 	public void registrarAtrasoPartida(Long minutoPartidaEfetivo) throws AtividadeNaoPermitidaException {
-		if(this.fase == BoletimProva.PRE_PROVA)
-			throw new AtividadeNaoPermitidaException("Não pode calcular minutos de atraso");
-		this.minutoPartidaEfetivo = minutoPartidaEfetivo;
-	}
+        this.fase.registrarAtrasoPartida(this, minutoPartidaEfetivo);
+    }
 	
 	public Long getMinutosAtraso() throws AtividadeNaoPermitidaException {
-		if(this.fase > BoletimProva.PRE_PROVA)
-			return minutoPartidaEfetivo - minutoPartidaPrevisto;
-		throw new AtividadeNaoPermitidaException("Não pode calcular minutos de atraso");
-	}	
-	
-	public void apresentarPraLargada() throws AtividadeNaoPermitidaException {
-		if(this.fase == BoletimProva.PRE_PROVA)
-			this.fase++;
-		else if(this.fase != BoletimProva.MOMENTO_LARGADA)
-			throw new AtividadeNaoPermitidaException("Fase não permite se apresentar pra largada.");
-	}
-	
-	public void registrarLargada() throws AtividadeNaoPermitidaException {
-		if(this.fase == BoletimProva.MOMENTO_LARGADA)
-			this.fase++;
-		else if(this.fase != BoletimProva.PISTA)
-			throw new AtividadeNaoPermitidaException("Fase não permite largar.");
-	}
+        return this.fase.getMinutosAtraso(this);
+    }
 
-	public void registrarChegada(Duration tempo) throws AtividadeNaoPermitidaException {
-		if(this.fase == BoletimProva.PISTA) {
-			this.fase++;
-			this.passagens.registrarPassagem(Prisma.CHEGADA, tempo);
-		}	
-		else if(this.fase != BoletimProva.PISTA)
-			throw new AtividadeNaoPermitidaException("Fase não permite registro de chegada.");
-	}	
-	
-	
+    public void apresentarPraLargada() throws AtividadeNaoPermitidaException {
+        this.fase.apresentarPraLargada(this);
+    }
 
+    public void registrarLargada() throws AtividadeNaoPermitidaException {
+        this.fase.registrarLargada(this);
+    }
+
+    public void registrarChegada(Duration tempo) throws AtividadeNaoPermitidaException {
+        this.fase.registrarChegada(this, tempo);
+    }
 }
