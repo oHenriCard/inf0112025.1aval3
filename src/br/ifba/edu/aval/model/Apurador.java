@@ -1,41 +1,50 @@
 package br.ifba.edu.aval.model;
 
 import java.time.Duration;
-import java.util.List;
 
+import br.ifba.edu.aval.chain.RegraVerificaTempoMaximo;
 import br.ifba.edu.aval.exception.AtividadeNaoPermitidaException;
 import br.ifba.edu.aval.exception.DNFException;
+import br.ifba.edu.aval.chain.*;
+
 
 public class Apurador {
-	
-	private Duration tempoMaximo;
-	
-	public Apurador(Duration tempoMaximoProva) {
-		this.tempoMaximo = tempoMaximoProva;
-	}
-	
-	public Duration apurar(BoletimProva boletim) throws DNFException, AtividadeNaoPermitidaException {
-		Duration tempoProva = Duration.ZERO;
-    	List<Integer> ordemPrismas = boletim.getOrdemPrismas();
-		
-    	tempoProva = boletim.getTempo(Prisma.CHEGADA);
-    	if(tempoProva == null)
-    		throw new DNFException("Atleta não registrou chegada");
-   		if(tempoProva.compareTo(this.tempoMaximo) > 0)
-   			throw new DNFException("O atleta finalizou a prova, após o tempo limite");
-    	for(int iCont = 0; iCont < ordemPrismas.size() - 1; iCont++) {
-    		Duration anterior = boletim.getTempo(ordemPrismas.get(iCont));
-    		Duration atual = boletim.getTempo(ordemPrismas.get(iCont+1));
-    		if(anterior != null && atual != null)
-    			if(anterior.compareTo(atual) > 0)
-    				throw new DNFException("Atleta registrou prisma fora da ordem");
-    	}
-       	for(int iCont = 0; iCont < ordemPrismas.size() - 1; iCont++) {
-       		Duration tempo = boletim.getTempo(ordemPrismas.get(iCont));
-       		if(ordemPrismas.get(iCont) != Prisma.CHEGADA && tempo == null)
-       			throw new DNFException("Atleta não registrou um dos prismas.");
-       	}	
-    	tempoProva = tempoProva.plus(Duration.ofMinutes(boletim.getMinutosAtraso()));
-    	return tempoProva;
-	}	
+
+    private RegraApuracao chain;
+
+    public Apurador(Duration tempoMaximoProva) {
+        // Constrói a cadeia de responsabilidades
+        this.buildChain(tempoMaximoProva);
+    }
+
+    private void buildChain(Duration tempoMaximoProva) {
+        // 1. A primeira regra a ser executada
+        this.chain = new RegraVerificaChegada();
+
+        // 2. Cria as outras regras
+        RegraApuracao regraTempoMaximo = new RegraVerificaTempoMaximo(tempoMaximoProva);
+        RegraApuracao regraOrdemPrismas = new RegraVerificaOrdemPrismas();
+        RegraApuracao regraTodosPrismas = new RegraVerificaTodosPrismasRegistrados();
+        RegraApuracao regraPenalidadeAtraso = new RegraAplicaPenalidadeAtraso();
+
+        // 3. Monta a cadeia ligando uma regra à outra
+        this.chain.setNext(regraTempoMaximo);
+        regraTempoMaximo.setNext(regraOrdemPrismas);
+        regraOrdemPrismas.setNext(regraTodosPrismas);
+        regraTodosPrismas.setNext(regraPenalidadeAtraso);
+        // A última regra (regraPenalidadeAtraso) não tem um 'next', encerrando a cadeia.
+    }
+
+    /**
+     * Inicia o processo de apuração chamando a primeira regra da cadeia.
+     * @param boletim O boletim de prova a ser apurado.
+     * @return O tempo final de prova do atleta.
+     * @throws DNFException se alguma regra na cadeia determinar que o atleta não completou a prova.
+     * @throws AtividadeNaoPermitidaException se ocorrer uma operação inválida durante a apuração.
+     */
+    public Duration apurar(BoletimProva boletim) throws DNFException, AtividadeNaoPermitidaException {
+        // Inicia o processamento com um tempo inicial ZERO.
+        // A regra VerificaChegada irá estabelecer o tempo base.
+        return this.chain.processar(boletim, Duration.ZERO);
+    }
 }
