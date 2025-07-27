@@ -15,7 +15,6 @@ public class RegraVerificaChegada extends RegraApuracao {
         if (tempoChegada == null) {
             throw new DNFException("Atleta não registrou chegada");
         }
-        // Define o tempo base da prova e passa para a próxima regra
         return processarNext(boletim, tempoChegada);
     }
 }
