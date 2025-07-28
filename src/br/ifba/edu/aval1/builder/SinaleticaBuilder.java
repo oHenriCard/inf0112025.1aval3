@@ -10,7 +10,7 @@ import br.ifba.edu.aval.model.Prisma;
 import br.ifba.edu.aval.model.Sexo;
 import br.ifba.edu.aval.model.Sinaletica;
 
-public class SinaleticaBuilder extends AbstractOrientacaoBuilder implements OrientacaoBuilder{
+public class SinaleticaBuilder extends AbstractOrientacaoBuilder {
 	
 	public static final Double METROS_POR_GRAU = 111320.0; 
 	

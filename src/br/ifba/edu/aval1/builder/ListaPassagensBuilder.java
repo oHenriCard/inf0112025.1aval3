@@ -12,7 +12,7 @@ import br.ifba.edu.aval1.prototype.BoletimProvaFactory;
 import br.ifba.edu.aval1.prototype.ListaPassagens;
 import br.ifba.edu.aval1.prototype.TempoPassagem;
 
-public class ListaPassagensBuilder extends AbstractOrientacaoBuilder implements OrientacaoBuilder{
+public class ListaPassagensBuilder extends AbstractOrientacaoBuilder {
 	
 	private Sexo sexo;
 	private Idade idade;
