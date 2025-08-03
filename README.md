@@ -14,7 +14,7 @@ Em nosso State, as classes são:
 ```
 FaseProvaState
 ```
-Este representa a interface em comum que todos os estados devem implementar. Todas as outras classes como:
+Este representa a interface em comum que todos os estados devem implementar. Todas as outras classes, como:
 ```
 MomentoLargadaState
 PistaState
@@ -42,4 +42,4 @@ RegraVerificaTodosPrismasRegistrados
 ```
 Que são nossos handlers concretos.
 
-Para não aplicar diversos parâmetros e tornar a extensibilidade mais flexível, criamos um objeto contexto chamado `ApuracaoContexto`, o qual encapsula todos os dados e o estado de operação. Se uma nova regra de apuração precisar de um novo campo, basta apenas adicioná-lo nesta classe, sem precisar mudar todos os métodos de assinatura nas demais classes já existentes.  
+Para não aplicar diversos parâmetros e tornar a extensibilidade mais flexível, criamos um objeto contexto chamado `ApuracaoContexto`, o qual encapsula todos os dados e o estado de operação. Se uma nova regra de apuração precisar de um novo campo, basta apenas adicioná-lo nesta classe, sem precisar mudar todos os métodos de assinatura nas demais classes já existentes. 
